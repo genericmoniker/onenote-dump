@@ -1,0 +1,109 @@
+<html lang="en-US">
+	<head>
+		<title>Multitenancy</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="created" content="2017-08-07T09:31:00.0000000" />
+	</head>
+	<body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+		<div style="position:absolute;left:48px;top:115px;width:576px">
+			<p style="margin-top:0pt;margin-bottom:0pt">The term &quot;<span style="font-size:10.5pt;color:#222222;background-color:white;font-weight:bold">software multitenancy</span>&quot; refers to a&#160;<a href="https://en.wikipedia.org/wiki/Software_architecture" style="font-size:10.5pt;background-color:white">software architecture</a>&#160;in which a single&#160;<a href="https://en.wikipedia.org/wiki/Instance_(computer_science)" style="font-size:10.5pt;background-color:white">instance</a>&#160;of&#160;<a href="https://en.wikipedia.org/wiki/Computer_software" style="font-size:10.5pt;background-color:white">software</a>&#160;runs on a server and serves multiple tenants. A tenant is a group of users who share a common access with specific privileges to the software instance. With a multitenant architecture, a&#160;<a href="https://en.wikipedia.org/wiki/Application_software" style="font-size:10.5pt;background-color:white">software application</a>&#160;is designed to provide every tenant a dedicated share of the instance - including its data, configuration, user management, tenant individual functionality and&#160;<a href="https://en.wikipedia.org/wiki/Non-functional_requirement" style="font-size:10.5pt;background-color:white">non-functional properties</a>. Multitenancy contrasts with multi-instance architectures, where separate software instances operate on behalf of different tenants.</p>
+			<br />
+			<cite style="font-size:9pt;color:#595959;margin-top:0pt;margin-bottom:0pt">From &lt;<a href="https://en.wikipedia.org/wiki/Multitenancy">https://en.wikipedia.org/wiki/Multitenancy</a>&gt; </cite>
+			<br />
+			<p style="color:#595959;font-style:italic;margin-top:0pt;margin-bottom:0pt">This is a quote.</p>
+			<br />
+			<h1 style="font-size:16pt;color:#1e4e79;margin-top:0pt;margin-bottom:0pt">Data Strategies</h1>
+			<p style="margin-top:0pt;margin-bottom:0pt"><a href="https://msdn.microsoft.com/en-us/library/aa479086.aspx">https://msdn.microsoft.com/en-us/library/aa479086.aspx</a></p>
+			<br />
+			<h2 style="font-size:14pt;color:#2e75b5;margin-top:0pt;margin-bottom:0pt">Separate database per tenant</h2>
+			<p style="margin-top:0pt;margin-bottom:0pt">Each tenant has their own database, with a mapping from users/groups to the right database for them.</p>
+			<ul>
+				<li>Clear and secure separation</li>
+				<li>Easy to restore a backup of a single tenant&#39;s data</li>
+				<li>More resources required compared to other strategies (expensive to operate)</li>
+				<li>May better support regulatory requirements?</li>
+			</ul>
+			<br />
+			<h2 style="font-size:14pt;color:#2e75b5;margin-top:0pt;margin-bottom:0pt">Separate database tables (schemas)</h2>
+			<p style="margin-top:0pt;margin-bottom:0pt">Tenants share a database, but there are a different set of tables for each tenant. You use schemas to keep data separate. A &quot;schema&quot; in this context is more precise than just &quot;the structure of tables&quot;. It could be thought of more like a namespace, and a particular user can have a default namespace. This is supported by many database systems.</p>
+			<ol>
+				<li>Not as strongly separated as separate database per tenant</li>
+				<li>Harder to restore a single tenant&#39;s data</li>
+				<li>Scales well </li>
+			</ol>
+			<br />
+			<h2 style="font-size:14pt;color:#2e75b5;margin-top:0pt;margin-bottom:0pt">Separate database rows</h2>
+			<p style="margin-top:0pt;margin-bottom:0pt">Every table has a tenant id column to indicate to which tenant the row belongs.</p>
+			<ul>
+				<li>Hardly any separation</li>
+				<li><p style="margin-top:0pt;margin-bottom:0pt">Implementation is more complex (for example, all queries require a tenant id or data will leak - can be accomplished by creating views)</p>
+				<ul>
+					<li style="list-style-type:circle">This would be nested</li>
+					<li style="list-style-type:circle">Here too</li>
+				</ul>
+				</li>
+				<li>Harder and potentially expensive to restore a single tenant&#39;s data</li>
+				<li>Best scaling for large numbers of tenants (cheap to operate)</li>
+				<br />
+			</ul>
+			<br />
+			<h1 style="font-size:16pt;color:#1e4e79;margin-top:0pt;margin-bottom:0pt">Implementation Details</h1>
+			<br />
+			<h2 style="font-size:14pt;color:#2e75b5;margin-top:0pt;margin-bottom:0pt">Separate schema</h2>
+			<br />
+			<p style="margin-top:0pt;margin-bottom:0pt">Example of this with SQLAlchemy and PostgreSQL: <a href="https://github.com/genericmoniker/lds-callings/blob/master/application/tenant.py">https://github.com/genericmoniker/lds-callings/blob/master/application/tenant.py</a></p>
+			<br />
+			<p style="margin-top:0pt;margin-bottom:0pt">Presumably you&#39;d need to run database migrations on every schema. Can you list the existing schemas?</p>
+			<br />
+			<p style="margin-top:0pt;margin-bottom:0pt">In a shell:</p>
+			<br />
+			<p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">&gt; \dn</p>
+			<p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">+------------+----------+</p>
+			<p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">| Name       | Owner    |</p>
+			<p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">|------------+----------|</p>
+			<p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">| public     | postgres |</p>
+			<p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">| stc_report | eric     |</p>
+			<p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">+------------+----------+</p>
+			<br />
+			<table style="border:1px solid;border-collapse:collapse">
+				<tr>
+					<td style="border:1px solid">Name</td>
+					<td style="border:1px solid">Owner</td>
+				</tr>
+				<tr>
+					<td style="border:1px solid">Public</td>
+					<td style="border:1px solid">Postgres</td>
+				</tr>
+				<tr>
+					<td style="border:1px solid">Stc_report</td>
+					<td style="border:1px solid">Eric</td>
+				</tr>
+			</table>
+			<br />
+			<br />
+			<img alt="Image result for tenant" width="274" height="184" src="https://graph.microsoft.com/v1.0/users('ericsmith@byu.net')/onenote/resources/0-ac8819a6903744e89e8c1f8dbe7d7e0b!1-E96487FCF7A2C29D!423/$value" data-src-type="image/jpeg" data-fullres-src="https://graph.microsoft.com/v1.0/users('ericsmith@byu.net')/onenote/resources/0-ac8819a6903744e89e8c1f8dbe7d7e0b!1-E96487FCF7A2C29D!423/$value" data-fullres-src-type="image/jpeg" />
+			<br />
+			<p data-tag="to-do" style="margin-top:0pt;margin-bottom:0pt">To do 1</p>
+			<p data-tag="to-do" style="margin-top:0pt;margin-bottom:0pt">To do 2</p>
+			<br />
+			<object data-attachment="attach.txt" type="text/plain" data="https://graph.microsoft.com/v1.0/users('ericsmith@byu.net')/onenote/resources/0-51742baa70ee4831a79cc644142cb773!1-E96487FCF7A2C29D!423/$value" />
+			<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+				<mi>A</mi>
+				<mo>=</mo>
+				<mi>&#120587;</mi>
+				<msup>
+					<mi>r</mi>
+					<mn>2</mn>
+				</msup>
+			</math>
+			<br />
+			<br />
+			<p style="margin-top:0pt;margin-bottom:0pt"><a href="onenote:#Patterns&amp;section-id={F6622E52-E0B9-4E07-9D58-5D1E968632F9}&amp;page-id={256DEF77-6B4E-4A0A-9633-94E67115F641}&amp;end&amp;base-path=https://d.docs.live.net/e96487fcf7a2c29d/Documents/Software%20Development/Architecture.one">Patterns</a></p>
+			<br />
+		</div>
+		<div style="position:absolute;left:192px;top:1627px;width:131px">
+			<p style="margin-top:0pt;margin-bottom:0pt"><br />
+6/1/2019 			</p>
+		</div>
+	</body>
+</html>
