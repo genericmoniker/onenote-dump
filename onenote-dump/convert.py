@@ -5,9 +5,6 @@ https://github.com/matthewwithanm/python-markdownify/blob/develop/markdownify/__
 
 TODO:
 * Metadata
-* Numbered lists
-* Nested lists
-* Finish table support
 * Download images
 * Download attachment files
 * Link to other notebook page
@@ -120,21 +117,52 @@ class Converter:
         return ' \n'
 
     def handle_li(self, tag, content):
-        return f'* {content}\n'
+        depth = self.li_depth(tag)
+        parent = tag.parent
+        if parent.name == 'ol':
+            bullet = f'{self.index_in_parent(tag) + 1}.'
+        else:
+            bullet = '*'
+        return f'{" " * 4 * depth}{bullet} {content or ""}\n'
 
     def handle_tr(self, tag, content):
-        return f'|{content}\n'
+        result = f'|{content}\n'
+        if self.index_in_parent(tag) == 0:
+            cell_count = self.child_count(tag, 'td')
+            result += f'|{"---|" * cell_count}\n'
+        return result
 
     def handle_td(self, tag, content):
         return f'{content}|'
 
-    def is_code_block(self, tag):
+    @staticmethod
+    def is_code_block(tag):
         return (
             tag
             and tag.name == 'p'
             and tag.get('style')
             and 'Consolas' in tag.get('style')
         )
+
+    @staticmethod
+    def li_depth(tag):
+        assert tag.name == 'li'
+        depth = -1
+        while tag:
+            if tag.name == 'li':
+                depth += 1
+            tag = tag.parent
+        return depth
+
+    @staticmethod
+    def index_in_parent(tag):
+        """Index of this tag among all sibling tags of the same name."""
+        all_items = tag.parent.find_all(tag.name, recursive=False)
+        return all_items.index(tag)
+
+    @staticmethod
+    def child_count(tag, child_name):
+        return len(tag.find_all(child_name, recursive=False))
 
 
 def next_sibling_tag(element):
