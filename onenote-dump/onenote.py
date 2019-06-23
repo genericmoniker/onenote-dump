@@ -40,6 +40,12 @@ def get_page_content(s: Session, page):
     return page, s.get(page['contentUrl']).content
 
 
+def get_attachment(s: Session, url):
+    r = s.get(url)
+    r.raise_for_status()
+    return r.content
+
+
 def _get(s: Session, url):
     r = s.get(url)
     r.raise_for_status()

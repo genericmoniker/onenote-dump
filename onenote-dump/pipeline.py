@@ -1,15 +1,18 @@
 import math
 from concurrent.futures import Future, ThreadPoolExecutor
+from pathlib import Path
 
 from onenote import get_page_content
 from convert import convert_page
 
 
 class Pipeline:
-
-    def __init__(self, onenote_session, out_dir, max_workers=10):
+    def __init__(self, onenote_session, out_dir: Path, max_workers=10):
         self.s = onenote_session
-        self.out_dir = out_dir
+        self.notes_dir = out_dir / 'notes'
+        self.notes_dir.mkdir(parents=True, exist_ok=True)
+        self.attach_dir = out_dir / 'attachments'
+        self.attach_dir.mkdir(parents=True, exist_ok=True)
         self.executors = [
             ThreadPoolExecutor(math.ceil(max_workers / 3), 'PipelinePage'),
             ThreadPoolExecutor(math.floor(max_workers / 3), 'PipelineConvert'),
@@ -22,7 +25,9 @@ class Pipeline:
 
     def _submit_conversion(self, future: Future):
         page, content = future.result()
-        future = self.executors[1].submit(convert_page, page, content)
+        future = self.executors[1].submit(
+            convert_page, page, content, self.s, self.attach_dir
+        )
         future.add_done_callback(self._submit_save)
 
     def _submit_save(self, future: Future):
@@ -31,8 +36,8 @@ class Pipeline:
         return future.result()
 
     def _save_page(self, page, content):
-        path = self.out_dir / (page['title'] + '.md')
-        path.write_text(content)
+        path = self.notes_dir / (page['title'] + '.md')
+        path.write_text(content, encoding='utf-8')
 
     def done(self):
         for executor in self.executors:

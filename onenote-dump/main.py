@@ -17,7 +17,7 @@ def main():
     # Authorize the app:
     s = onenote_auth.get_session()
     
-    out_dir = pathlib.Path(r'D:\Temp')
+    out_dir = pathlib.Path(r'D:\Temp\Notable')
     out_dir.mkdir(parents=True, exist_ok=True)
     pipe = pipeline.Pipeline(s, out_dir)
 

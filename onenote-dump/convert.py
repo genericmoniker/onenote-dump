@@ -5,22 +5,26 @@ https://github.com/matthewwithanm/python-markdownify/blob/develop/markdownify/__
 
 TODO:
 * Metadata
-* Download images
-* Download attachment files
 * Link to other notebook page
 * Try to figure out the language of code blocks (guesslang)
 
 """
+from pathlib import Path
+import mimetypes
 import re
 import tempfile
-from pathlib import Path
+import uuid
 from bs4 import BeautifulSoup, NavigableString, Tag
+
+from onenote import get_attachment
 
 
 class Converter:
-    def __init__(self, page, content):
+    def __init__(self, page, content, one_note_session, attach_dir):
         self.page = page
         self.content = content
+        self.s = one_note_session
+        self.attach_dir = attach_dir
         self.space_re = re.compile(r'[ \t]')
         self.lines_re = re.compile(r'([\r\n] *){3,}')
         self.in_code_block = False
@@ -135,6 +139,21 @@ class Converter:
     def handle_td(self, tag, content):
         return f'{content}|'
 
+    def handle_img(self, tag, content):
+        url = tag.get('src')
+        mime_type = tag.get('data-src-type')
+        if url.startswith('https://graph.microsoft.com') and self.s:
+            url = download_img(self.s, url, mime_type, self.attach_dir)
+        alt = tag.get('alt')
+        return f'![{alt}]({url})'
+
+    def handle_object(self, tag, content):
+        url = tag.get('data')
+        filename = tag.get('data-attachment')
+        if url.startswith('https://graph.microsoft.com') and self.s:
+            url = download_object(self.s, url, filename, self.attach_dir)
+        return f'[]({url})\n'
+
     @staticmethod
     def is_code_block(tag):
         return (
@@ -172,14 +191,33 @@ def next_sibling_tag(element):
     return element
 
 
-def convert_page(page, content):
+def download_img(s, url, mime_type, attach_dir):
+    data = get_attachment(s, url)
+    extension = mimetypes.guess_extension(mime_type)
+    name = str(uuid.uuid4())
+    path = attach_dir / (name + extension)
+    path.write_bytes(data)
+    return f'@attachment/{name}{extension}'
+
+
+def download_object(s, url, filename, attach_dir):
+    data = get_attachment(s, url)
+    path = attach_dir / filename
+    path.write_bytes(data)
+    return f'@attachment/{filename}'
+
+
+def convert_page(page, content, one_note_session, attach_dir):
     (Path(r'D:\Temp') / (page['title'] + '.html')).write_bytes(content)
-    return page, Converter(page, content).convert()
+    markdown = Converter(page, content, one_note_session, attach_dir).convert()
+    return (page, markdown)
 
 
 if __name__ == '__main__':
     p_in = Path(__file__).parent.parent / 'test/test.html'
     content = p_in.read_bytes()
     p_out = Path(tempfile.gettempdir()) / 'test.md'
-    p_out.write_bytes(convert_page({'title': 'Test'}, content)[1].encode())
+    p_out.write_bytes(
+        convert_page({'title': 'Test'}, content, None)[1].encode()
+    )
     print(p_out)
