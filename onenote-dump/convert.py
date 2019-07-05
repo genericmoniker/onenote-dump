@@ -28,6 +28,7 @@ class Converter:
         self.attach_dir = attach_dir
         self.space_re = re.compile(r'[ \t]')
         self.lines_re = re.compile(r'([\r\n] *){3,}')
+        self.note_link_re = re.compile(r'onenote:#(.+?)&')
         self.in_code_block = False
 
     def convert(self):
@@ -115,6 +116,9 @@ class Converter:
 
     def handle_a(self, tag, content):
         href = tag.get('href')
+        match = self.note_link_re.search(href)
+        if match:
+            href = f'@note/{match.group(1)}.md'
         title = tag.get('title')
         title = title.replace('"', r'\"') if title else ''
         title = f' "{title}"' if title else ''
@@ -229,7 +233,6 @@ def download_object(s, url, filename, attach_dir):
 
 
 def convert_page(page, content, notebook, one_note_session, attach_dir):
-    (Path(r'D:\Temp') / (page['title'] + '.html')).write_bytes(content)
     markdown = Converter(
         page, content, notebook, one_note_session, attach_dir
     ).convert()

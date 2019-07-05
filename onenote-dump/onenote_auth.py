@@ -1,6 +1,6 @@
 from oauthlib.oauth2 import TokenExpiredError
 from requests_oauthlib import OAuth2Session
-
+import datetime
 import json
 import logging
 import webbrowser
@@ -34,7 +34,11 @@ def get_session():
 
 def session_from_saved_token():
     token = _load_token()
-    # TODO: Check token['expires_at']?
+    expires = datetime.datetime.fromtimestamp(token['expires_at'])
+    # If the token will expire in the next few minutes, just get a new one.
+    if expires < datetime.datetime.now() + datetime.timedelta(minutes=5):
+        logger.debug('Saved token expired.')
+        raise TokenExpiredError()
     s = OAuth2Session(client_id, token=token)
     return s
 
