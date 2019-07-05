@@ -4,7 +4,6 @@ Inspired by:
 https://github.com/matthewwithanm/python-markdownify/blob/develop/markdownify/__init__.py
 
 TODO:
-* Metadata
 * Link to other notebook page
 * Try to figure out the language of code blocks (guesslang)
 
@@ -108,6 +107,8 @@ class Converter:
             if not self.is_code_block(next_sibling_tag(tag)):
                 self.in_code_block = False
                 result += '```\n\n'
+        elif self.is_quote_block(tag):
+            result = f'> {content}\n\n'
         else:
             result = f'{content}\n\n'
         return result
@@ -173,6 +174,14 @@ class Converter:
             and tag.name == 'p'
             and tag.get('style')
             and 'Consolas' in tag.get('style')
+        )
+
+    @staticmethod
+    def is_quote_block(tag):
+        return (
+            tag
+            and 'color:#595959' in tag.get('style')
+            and 'font-style:italic' in tag.get('style')
         )
 
     @staticmethod
