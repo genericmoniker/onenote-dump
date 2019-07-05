@@ -13,6 +13,7 @@ from pathlib import Path
 import mimetypes
 import re
 import tempfile
+import textwrap
 import uuid
 from bs4 import BeautifulSoup, NavigableString, Tag
 
@@ -20,9 +21,10 @@ from onenote import get_attachment
 
 
 class Converter:
-    def __init__(self, page, content, one_note_session, attach_dir):
+    def __init__(self, page, content, notebook, one_note_session, attach_dir):
         self.page = page
         self.content = content
+        self.notebook = notebook
         self.s = one_note_session
         self.attach_dir = attach_dir
         self.space_re = re.compile(r'[ \t]')
@@ -30,17 +32,27 @@ class Converter:
         self.in_code_block = False
 
     def convert(self):
-        result = ''  # TODO: metadata
+        result = self.create_metadata()
         root = BeautifulSoup(self.content, 'html.parser')
         result += self.handle_element(root)
-        result = self.clean_up(result)
         return result
 
-    def clean_up(self, result):
-        # result = result.lstrip()
-        # result = self.space_re.sub(' ', result)
-        # result = self.lines_re.sub('\n\n', result)
-        return result
+    def create_metadata(self):
+        tags = ['Notebooks/' + self.notebook]
+        parent_tag = self.page.get('parentSection', {}).get('displayName', '')
+        if parent_tag:
+            tags.append(parent_tag)
+        return textwrap.dedent(
+            f"""
+            ---
+            title: "{self.page.get('title')}"
+            created: '{self.page.get('createdDateTime')}'
+            modified: '{self.page.get('lastModifiedDateTime')}'
+            tags: [{', '.join(tags)}]
+            ---
+
+            """
+        ).lstrip()
 
     def handle_element(self, element):
         content = ''
@@ -207,14 +219,16 @@ def download_object(s, url, filename, attach_dir):
     return f'@attachment/{filename}'
 
 
-def convert_page(page, content, one_note_session, attach_dir):
+def convert_page(page, content, notebook, one_note_session, attach_dir):
     (Path(r'D:\Temp') / (page['title'] + '.html')).write_bytes(content)
-    markdown = Converter(page, content, one_note_session, attach_dir).convert()
+    markdown = Converter(
+        page, content, notebook, one_note_session, attach_dir
+    ).convert()
     return (page, markdown)
 
 
 if __name__ == '__main__':
-    p_in = Path(__file__).parent.parent / 'test/test.html'
+    p_in = Path(__file__).parent.parent / 'test/content.html'
     content = p_in.read_bytes()
     p_out = Path(tempfile.gettempdir()) / 'test.md'
     p_out.write_bytes(

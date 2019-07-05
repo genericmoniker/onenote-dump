@@ -7,8 +7,11 @@ from convert import convert_page
 
 
 class Pipeline:
-    def __init__(self, onenote_session, out_dir: Path, max_workers=10):
+    def __init__(
+        self, onenote_session, notebook: str, out_dir: Path, max_workers=10
+    ):
         self.s = onenote_session
+        self.notebook = notebook
         self.notes_dir = out_dir / 'notes'
         self.notes_dir.mkdir(parents=True, exist_ok=True)
         self.attach_dir = out_dir / 'attachments'
@@ -26,7 +29,7 @@ class Pipeline:
     def _submit_conversion(self, future: Future):
         page, content = future.result()
         future = self.executors[1].submit(
-            convert_page, page, content, self.s, self.attach_dir
+            convert_page, page, content, self.notebook, self.s, self.attach_dir
         )
         future.add_done_callback(self._submit_save)
 

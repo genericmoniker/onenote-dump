@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import pathlib
@@ -16,13 +17,15 @@ def main():
 
     # Authorize the app:
     s = onenote_auth.get_session()
-    
+
+    notebook = 'Software Development'
+
     out_dir = pathlib.Path(r'D:\Temp\Notable')
     out_dir.mkdir(parents=True, exist_ok=True)
-    pipe = pipeline.Pipeline(s, out_dir)
+    pipe = pipeline.Pipeline(s, notebook, out_dir)
 
     pc = 0
-    for page in onenote.get_notebook_pages(s, 'Software Development'):
+    for page in onenote.get_notebook_pages(s, notebook):
         pipe.add_page(page)
         pc += 1
         if pc > 3:

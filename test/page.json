@@ -1,0 +1,23 @@
+{
+    "id": "0-116901a11cb606ae37d83100859d3981!1-E96487FCF7A2C29D!423",
+    "self": "https://graph.microsoft.com/v1.0/users/ericsmith@byu.net/onenote/pages/0-116901a11cb606ae37d83100859d3981!1-E96487FCF7A2C29D!423",
+    "createdDateTime": "2017-08-07T15:31:10Z",
+    "title": "Multitenancy",
+    "createdByAppId": "",
+    "contentUrl": "https://graph.microsoft.com/v1.0/users/ericsmith@byu.net/onenote/pages/0-116901a11cb606ae37d83100859d3981!1-E96487FCF7A2C29D!423/content",
+    "lastModifiedDateTime": "2019-06-01T23:27:23Z",
+    "links": {
+      "oneNoteClientUrl": {
+        "href": "onenote:https://d.docs.live.net/e96487fcf7a2c29d/Documents/Software%20Development/Architecture.one#Multitenancy&section-id=f6622e52-e0b9-4e07-9d58-5d1e968632f9&page-id=684cffa8-cd8e-4ca5-832b-0bf51eb924f6&end"
+      },
+      "oneNoteWebUrl": {
+        "href": "https://onedrive.live.com/redir.aspx?cid=e96487fcf7a2c29d&page=edit&resid=E96487FCF7A2C29D!210&parId=E96487FCF7A2C29D!128&wd=target%28Architecture.one%7Cf6622e52-e0b9-4e07-9d58-5d1e968632f9%2FMultitenancy%7C684cffa8-cd8e-4ca5-832b-0bf51eb924f6%2F%29"
+      }
+    },
+    "parentSection@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('ericsmith%40byu.net')/onenote/sections('0-E96487FCF7A2C29D%21423')/pages('0-116901a11cb606ae37d83100859d3981%211-E96487FCF7A2C29D%21423')/parentSection/$entity",
+    "parentSection": {
+      "id": "0-E96487FCF7A2C29D!423",
+      "displayName": "Architecture",
+      "self": "https://graph.microsoft.com/v1.0/users/ericsmith@byu.net/onenote/sections/0-E96487FCF7A2C29D!423"
+    }
+  }
