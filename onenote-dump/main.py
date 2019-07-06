@@ -36,7 +36,7 @@ def main():
     ):
         logger.info('Page: %s', page['title'])
         pipe.add_page(page)
-        if page_count > 3:
+        if args.max_pages and page_count > args.max_pages:
             break
 
     pipe.done()
@@ -49,7 +49,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('notebook', help='display name of notebook to dump')
     parser.add_argument('output_dir', help='directory to which to output')
-    parser.add_argument('-v', '--verbose', help='show verbose output')
+    parser.add_argument('-m', '--max-pages', type=int, help='max pages to dump')
+    parser.add_argument('-v', '--verbose', action="store_true", help='show verbose output')
     return parser.parse_args()
 
 
