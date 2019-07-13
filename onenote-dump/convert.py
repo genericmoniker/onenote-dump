@@ -3,8 +3,7 @@
 Inspired by:
 https://github.com/matthewwithanm/python-markdownify/blob/develop/markdownify/__init__.py
 
-TODO:
-* Link to other notebook page
+Future?
 * Try to figure out the language of code blocks (guesslang)
 
 """
