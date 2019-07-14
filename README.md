@@ -55,5 +55,10 @@ as the authorization token is good (about an hour).
 
 The output directory and parents will be created if needed.
 
+If your notebook is large, there is a good chance you'll hit the request rate
+limit on Microsoft's API, which will cause the script to wait for a few minutes
+and try again. You may wish to kill the program (Ctrl+C) and use the
+`--start-page` option some time later. 
+
 If you're happy with the output, you can copy it to your Notable notes
 directory. 

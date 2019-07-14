@@ -31,26 +31,39 @@ def main():
 
     start_time = time.perf_counter()
     pipe = pipeline.Pipeline(s, args.notebook, output_dir)
+    pages = 0
     for page_count, page in enumerate(
         onenote.get_notebook_pages(s, args.notebook), 1
     ):
-        logger.info('Page: %s', page['title'])
-        pipe.add_page(page)
+        log_msg = f'Page {page_count}: {page["title"]}'
+        if args.start_page is None or page_count >= args.start_page:
+            logger.info(log_msg)
+            pipe.add_page(page)
+            pages += 1
+        else:
+            logger.info(log_msg + ' [skipped]')
         if args.max_pages and page_count > args.max_pages:
             break
 
     pipe.done()
     stop_time = time.perf_counter()
     logger.info('Done!')
-    logger.info('%s pages in %.1f seconds', page_count, stop_time - start_time)
+    logger.info('%s pages in %.1f seconds', pages, stop_time - start_time)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('notebook', help='display name of notebook to dump')
     parser.add_argument('output_dir', help='directory to which to output')
-    parser.add_argument('-m', '--max-pages', type=int, help='max pages to dump')
-    parser.add_argument('-v', '--verbose', action="store_true", help='show verbose output')
+    parser.add_argument(
+        '-m', '--max-pages', type=int, help='max pages to dump'
+    )
+    parser.add_argument(
+        '-s', '--start-page', type=int, help='start page to dump'
+    )
+    parser.add_argument(
+        '-v', '--verbose', action="store_true", help='show verbose output'
+    )
     return parser.parse_args()
 
 

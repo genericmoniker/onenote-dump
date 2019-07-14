@@ -1,6 +1,11 @@
-from requests import Session
+import logging
+from datetime import timedelta
+from requests import Session, HTTPError, status_codes
+from tenacity import retry, retry_if_exception, wait_exponential
 
 BASE_URL = 'https://graph.microsoft.com/v1.0/me/onenote/'
+
+logger = logging.getLogger(__name__)
 
 
 def get_notebook_pages(s: Session, notebook_display_name):
@@ -10,7 +15,7 @@ def get_notebook_pages(s: Session, notebook_display_name):
 
 
 def get_notebooks(s: Session):
-    return _get(s, BASE_URL + 'notebooks')
+    return _get_json(s, BASE_URL + 'notebooks')
 
 
 def find_notebook(notebooks, display_name):
@@ -20,33 +25,64 @@ def find_notebook(notebooks, display_name):
     return None
 
 
-def get_section_groups(s: Session, notebook):
-    return _get(notebook['sectionGroupsUrl'])
-
-
-def get_sections(s: Session, section_group):
-    return _get(section_group['sectionsUrl'])
+def get_sections(s: Session, parent):
+    """Get all sections, recursively."""
+    url = parent.get('sectionsUrl')
+    if url:
+        sections = _get_json(s, url)
+        for section in sections['value']:
+            yield section
+    url = parent.get('sectionGroupsUrl')
+    if url:
+        section_groups = _get_json(s, url)
+        for section_group in section_groups['value']:
+            yield from get_sections(s, section_group)
 
 
 def get_pages(s: Session, notebook):
-    sections = _get(s, notebook['sectionsUrl'])
-    for section in sections['value']:
-        pages = _get(s, section['pagesUrl'])
-        for page in pages['value']:
-            yield page
+    for section in get_sections(s, notebook):
+        url = section['pagesUrl']
+        while url:
+            pages = _get_json(s, url)
+            for page in pages['value']:
+                yield page
+            url = pages.get('@odata.nextLink')
 
 
 def get_page_content(s: Session, page):
-    return page, s.get(page['contentUrl']).content
+    return page, _get(s, page['contentUrl']).content
 
 
 def get_attachment(s: Session, url):
-    r = s.get(url)
-    r.raise_for_status()
-    return r.content
+    return _get(s, url).content
 
 
+def _get_json(s: Session, url):
+    return _get(s, url).json()
+
+
+# This section of code handles rate-limiting errors.
+# https://docs.microsoft.com/en-us/graph/throttling
+# But note that OneNote is not listed as an API with a Retry-After header, so
+# we just have to guess at how long to wait, and exponentially back off if we
+# guess wrong.
+
+MIN_RETRY_WAIT = timedelta(minutes=5).total_seconds()
+
+
+def _is_too_many_requests(e: Exception):
+    if hasattr(e, 'response'):
+        if e.response.status_code == 429:
+            logger.info('Request rate limit hit. Waiting a few minutes...')
+            return True
+    return False
+
+
+@retry(
+    retry=retry_if_exception(_is_too_many_requests),
+    wait=wait_exponential(min=MIN_RETRY_WAIT),
+)
 def _get(s: Session, url):
     r = s.get(url)
     r.raise_for_status()
-    return r.json()
+    return r
