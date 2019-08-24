@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import webbrowser
+from contextlib import suppress
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from queue import Queue
@@ -25,20 +26,28 @@ redirect_uri = 'http://localhost:8000/auth'
 token_path = Path.home() / '.onenote-dump-token'
 
 
-def get_session():
+def get_session(new: bool = False):
     try:
-        return session_from_saved_token()
+        return session_from_saved_token(new)
     except (IOError, TokenExpiredError):
         return session_from_user_auth()
 
 
-def session_from_saved_token():
+def session_from_saved_token(new):
+    if new:
+        logger.info('Ignoring saved auth token.')
+        logger.info(
+            'NOTE: To switch accounts, you may need to delete all browser '
+            'cookies for login.live.com and login.microsoftonline.com.'
+        )
+        _delete_token()
+        raise TokenExpiredError
     token = _load_token()
     expires = datetime.datetime.fromtimestamp(token['expires_at'])
     # If the token will expire in the next few minutes, just get a new one.
     if expires < datetime.datetime.now() + datetime.timedelta(minutes=5):
         logger.debug('Saved token expired.')
-        raise TokenExpiredError()
+        raise TokenExpiredError
     s = OAuth2Session(client_id, token=token)
     return s
 
@@ -125,3 +134,8 @@ def _load_token():
     token = json.loads(token_path.read_text())
     logger.debug('Auth token loaded from %s', token_path)
     return token
+
+
+def _delete_token():
+    with suppress(FileNotFoundError):
+        token_path.unlink()

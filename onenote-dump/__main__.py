@@ -23,7 +23,7 @@ def main():
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 
     # Authorize the app:
-    s = onenote_auth.get_session()
+    s = onenote_auth.get_session(args.new_session)
 
     output_dir = pathlib.Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -62,7 +62,13 @@ def parse_args():
         '-m', '--max-pages', type=int, help='max pages to dump'
     )
     parser.add_argument(
-        '-s', '--start-page', type=int, help='start page to dump'
+        '-s', '--start-page', type=int, help='start page number to dump'
+    )
+    parser.add_argument(
+        '-n',
+        '--new-session',
+        action="store_true",
+        help='ignore saved auth token',
     )
     parser.add_argument(
         '-v', '--verbose', action="store_true", help='show verbose output'

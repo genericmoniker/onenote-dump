@@ -51,7 +51,8 @@ python onenote-dump --help
 
 When run, the script will launch a browser window so that you can authorize the
 script to access your OneNote data. Subsequent runs won't require this, so long
-as the authorization token is good (about an hour). 
+as the authorization token is good (about an hour). If you want to force
+reauthentication, you can pass the "--new-session" param. 
 
 The output directory and parents will be created if needed.
 
