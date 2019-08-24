@@ -8,9 +8,28 @@ BASE_URL = 'https://graph.microsoft.com/v1.0/me/onenote/'
 logger = logging.getLogger(__name__)
 
 
+class NotebookNotFound(Exception):
+    def __init__(self, name, s: Session = None):
+        msg = f'Notebook "{name}" not found. ' + self._possible_notebooks(s)
+        super().__init__(msg)
+
+    @staticmethod
+    def _possible_notebooks(s: Session):
+        notebooks = []
+        if s:
+            try:
+                notebooks = get_notebooks(s)
+                names = [n['displayName'] for n in notebooks['value']]
+                return 'Maybe:\n' + '\n'.join(names) + '\n'
+            except Exception:
+                return 'Possible notebooks unknown.'
+
+
 def get_notebook_pages(s: Session, notebook_display_name):
     notebooks = get_notebooks(s)
     notebook = find_notebook(notebooks, notebook_display_name)
+    if notebook is None:
+        raise NotebookNotFound(notebook_display_name, s)
     yield from get_pages(s, notebook)
 
 

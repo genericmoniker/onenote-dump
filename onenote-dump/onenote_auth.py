@@ -118,10 +118,10 @@ class AuthHTTPServer:
 
 def _save_token(token):
     token_path.write_text(json.dumps(token))
-    logger.debug('Token saved to %s', token_path)
+    logger.debug('Auth token saved to %s', token_path)
 
 
 def _load_token():
     token = json.loads(token_path.read_text())
-    logger.debug('Token loaded from %s', token_path)
+    logger.debug('Auth token loaded from %s', token_path)
     return token

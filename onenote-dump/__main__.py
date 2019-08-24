@@ -32,18 +32,21 @@ def main():
     start_time = time.perf_counter()
     pipe = pipeline.Pipeline(s, args.notebook, output_dir)
     pages = 0
-    for page_count, page in enumerate(
-        onenote.get_notebook_pages(s, args.notebook), 1
-    ):
-        log_msg = f'Page {page_count}: {page["title"]}'
-        if args.start_page is None or page_count >= args.start_page:
-            logger.info(log_msg)
-            pipe.add_page(page)
-            pages += 1
-        else:
-            logger.info(log_msg + ' [skipped]')
-        if args.max_pages and page_count > args.max_pages:
-            break
+    try:
+        for page_count, page in enumerate(
+            onenote.get_notebook_pages(s, args.notebook), 1
+        ):
+            log_msg = f'Page {page_count}: {page["title"]}'
+            if args.start_page is None or page_count >= args.start_page:
+                logger.info(log_msg)
+                pipe.add_page(page)
+                pages += 1
+            else:
+                logger.info(log_msg + ' [skipped]')
+            if args.max_pages and page_count > args.max_pages:
+                break
+    except onenote.NotebookNotFound as e:
+        logger.error(str(e))
 
     pipe.done()
     stop_time = time.perf_counter()
