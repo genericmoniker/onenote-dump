@@ -176,7 +176,9 @@ class Converter:
             tag
             and tag.name == 'p'
             and tag.get('style')
-            and 'Consolas' in tag.get('style')
+            and (
+                'Consolas' in tag.get('style') or 'Courier' in tag.get('style')
+            )
         )
 
     @staticmethod
@@ -216,7 +218,7 @@ def next_sibling_tag(element):
 
 
 def download_img(s, url, mime_type, attach_dir):
-    data = get_attachment(s, url)
+    data = get_attachment(s, url) if s else b' '
     extension = mimetypes.guess_extension(mime_type)
     name = str(uuid.uuid4())
     path = attach_dir / (name + extension)
@@ -225,7 +227,7 @@ def download_img(s, url, mime_type, attach_dir):
 
 
 def download_object(s, url, filename, attach_dir):
-    data = get_attachment(s, url)
+    data = get_attachment(s, url) if s else b' '
     path = attach_dir / filename
     path.write_bytes(data)
     return f'@attachment/{filename}'
@@ -243,6 +245,8 @@ if __name__ == '__main__':
     content = p_in.read_bytes()
     p_out = Path(tempfile.gettempdir()) / 'test.md'
     p_out.write_bytes(
-        convert_page({'title': 'Test'}, content, None)[1].encode()
+        convert_page({'title': 'Test'}, content, '', None, p_out.parent)[
+            1
+        ].encode()
     )
     print(p_out)

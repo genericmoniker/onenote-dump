@@ -1,6 +1,6 @@
 import logging
 from datetime import timedelta
-from requests import Session, HTTPError, status_codes
+from requests import Session
 from tenacity import retry, retry_if_exception, wait_exponential
 
 BASE_URL = 'https://graph.microsoft.com/v1.0/me/onenote/'
