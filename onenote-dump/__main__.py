@@ -34,7 +34,7 @@ def main():
     pages = 0
     try:
         for page_count, page in enumerate(
-            onenote.get_notebook_pages(s, args.notebook), 1
+            onenote.get_notebook_pages(s, args.notebook, args.section), 1
         ):
             log_msg = f'Page {page_count}: {page["title"]}'
             if args.start_page is None or page_count >= args.start_page:
@@ -58,6 +58,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('notebook', help='display name of notebook to dump')
     parser.add_argument('output_dir', help='directory to which to output')
+    parser.add_argument('--section', help='display name of section to dump')
     parser.add_argument(
         '-m', '--max-pages', type=int, help='max pages to dump'
     )

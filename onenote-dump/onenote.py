@@ -25,12 +25,12 @@ class NotebookNotFound(Exception):
                 return 'Possible notebooks unknown.'
 
 
-def get_notebook_pages(s: Session, notebook_display_name):
+def get_notebook_pages(s: Session, notebook_display_name, section_display_name):
     notebooks = get_notebooks(s)
     notebook = find_notebook(notebooks, notebook_display_name)
     if notebook is None:
         raise NotebookNotFound(notebook_display_name, s)
-    yield from get_pages(s, notebook)
+    yield from get_pages(s, notebook, section_display_name)
 
 
 def get_notebooks(s: Session):
@@ -44,12 +44,14 @@ def find_notebook(notebooks, display_name):
     return None
 
 
-def get_sections(s: Session, parent):
+def get_sections(s: Session, parent, section_display_name):
     """Get all sections, recursively."""
     url = parent.get('sectionsUrl')
     if url:
         sections = _get_json(s, url)
         for section in sections['value']:
+            if section_display_name and section['displayName'] != section_display_name:
+                continue
             yield section
     url = parent.get('sectionGroupsUrl')
     if url:
@@ -58,8 +60,8 @@ def get_sections(s: Session, parent):
             yield from get_sections(s, section_group)
 
 
-def get_pages(s: Session, notebook):
-    for section in get_sections(s, notebook):
+def get_pages(s: Session, notebook, section_display_name):
+    for section in get_sections(s, notebook, section_display_name):
         url = section['pagesUrl']
         while url:
             pages = _get_json(s, url)
