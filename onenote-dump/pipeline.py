@@ -3,26 +3,24 @@ import re
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
-from onenote import get_page_content
 from convert import convert_page
+from onenote import get_page_content
 
 
 class Pipeline:
-    def __init__(
-        self, onenote_session, notebook: str, out_dir: Path, max_workers=10
-    ):
+    def __init__(self, onenote_session, notebook: str, out_dir: Path, max_workers=10):
         self.s = onenote_session
         self.notebook = notebook
-        self.filename_re = re.compile(r'[<>:\"/\\\|\?\*#]')
-        self.whitespace_re = re.compile(r'\s+')
-        self.notes_dir = out_dir / 'notes'
+        self.filename_re = re.compile(r"[<>:\"/\\\|\?\*#]")
+        self.whitespace_re = re.compile(r"\s+")
+        self.notes_dir = out_dir / "notes"
         self.notes_dir.mkdir(parents=True, exist_ok=True)
-        self.attach_dir = out_dir / 'attachments'
+        self.attach_dir = out_dir / "attachments"
         self.attach_dir.mkdir(parents=True, exist_ok=True)
         self.executors = [
-            ThreadPoolExecutor(math.ceil(max_workers / 3), 'PipelinePage'),
-            ThreadPoolExecutor(math.floor(max_workers / 3), 'PipelineConvert'),
-            ThreadPoolExecutor(math.floor(max_workers / 3), 'PipelineSave'),
+            ThreadPoolExecutor(math.ceil(max_workers / 3), "PipelinePage"),
+            ThreadPoolExecutor(math.floor(max_workers / 3), "PipelineConvert"),
+            ThreadPoolExecutor(math.floor(max_workers / 3), "PipelineSave"),
         ]
 
     def add_page(self, page: dict):
@@ -42,12 +40,12 @@ class Pipeline:
         return future.result()
 
     def _save_page(self, page, content):
-        path = self.notes_dir / (self._filenamify(page['title']) + '.md')
-        path.write_text(content, encoding='utf-8')
+        path = self.notes_dir / (self._filenamify(page["title"]) + ".md")
+        path.write_text(content, encoding="utf-8")
 
     def _filenamify(self, s):
-        s = self.filename_re.sub(' ', s)
-        s = self.whitespace_re.sub(' ', s)
+        s = self.filename_re.sub(" ", s)
+        s = self.whitespace_re.sub(" ", s)
         return s.strip()
 
     def done(self):

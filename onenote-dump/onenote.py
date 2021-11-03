@@ -1,9 +1,10 @@
 import logging
 from datetime import timedelta
+
 from requests import Session
 from tenacity import retry, retry_if_exception, wait_exponential
 
-BASE_URL = 'https://graph.microsoft.com/v1.0/me/onenote/'
+BASE_URL = "https://graph.microsoft.com/v1.0/me/onenote/"
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +20,10 @@ class NotebookNotFound(Exception):
         if s:
             try:
                 notebooks = get_notebooks(s)
-                names = [n['displayName'] for n in notebooks['value']]
-                return 'Maybe:\n' + '\n'.join(names) + '\n'
+                names = [n["displayName"] for n in notebooks["value"]]
+                return "Maybe:\n" + "\n".join(names) + "\n"
             except Exception:
-                return 'Possible notebooks unknown.'
+                return "Possible notebooks unknown."
 
 
 def get_notebook_pages(s: Session, notebook_display_name):
@@ -34,42 +35,42 @@ def get_notebook_pages(s: Session, notebook_display_name):
 
 
 def get_notebooks(s: Session):
-    return _get_json(s, BASE_URL + 'notebooks')
+    return _get_json(s, BASE_URL + "notebooks")
 
 
 def find_notebook(notebooks, display_name):
-    for notebook in notebooks['value']:
-        if notebook['displayName'] == display_name:
+    for notebook in notebooks["value"]:
+        if notebook["displayName"] == display_name:
             return notebook
     return None
 
 
 def get_sections(s: Session, parent):
     """Get all sections, recursively."""
-    url = parent.get('sectionsUrl')
+    url = parent.get("sectionsUrl")
     if url:
         sections = _get_json(s, url)
-        for section in sections['value']:
+        for section in sections["value"]:
             yield section
-    url = parent.get('sectionGroupsUrl')
+    url = parent.get("sectionGroupsUrl")
     if url:
         section_groups = _get_json(s, url)
-        for section_group in section_groups['value']:
+        for section_group in section_groups["value"]:
             yield from get_sections(s, section_group)
 
 
 def get_pages(s: Session, notebook):
     for section in get_sections(s, notebook):
-        url = section['pagesUrl']
+        url = section["pagesUrl"]
         while url:
             pages = _get_json(s, url)
-            for page in pages['value']:
+            for page in pages["value"]:
                 yield page
-            url = pages.get('@odata.nextLink')
+            url = pages.get("@odata.nextLink")
 
 
 def get_page_content(s: Session, page):
-    return page, _get(s, page['contentUrl']).content
+    return page, _get(s, page["contentUrl"]).content
 
 
 def get_attachment(s: Session, url):
@@ -90,9 +91,9 @@ MIN_RETRY_WAIT = timedelta(minutes=5).total_seconds()
 
 
 def _is_too_many_requests(e: Exception):
-    if hasattr(e, 'response'):
+    if hasattr(e, "response"):
         if e.response.status_code == 429:
-            logger.info('Request rate limit hit. Waiting a few minutes...')
+            logger.info("Request rate limit hit. Waiting a few minutes...")
             return True
     return False
 

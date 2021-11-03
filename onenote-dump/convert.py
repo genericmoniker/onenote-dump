@@ -7,14 +7,14 @@ Future?
 * Try to figure out the language of code blocks (guesslang)
 
 """
-from pathlib import Path
 import mimetypes
 import re
 import tempfile
 import textwrap
 import uuid
-from bs4 import BeautifulSoup, NavigableString, Tag
+from pathlib import Path
 
+from bs4 import BeautifulSoup, NavigableString, Tag
 from onenote import get_attachment
 
 
@@ -25,20 +25,20 @@ class Converter:
         self.notebook = notebook
         self.s = one_note_session
         self.attach_dir = attach_dir
-        self.space_re = re.compile(r'[ \t]')
-        self.lines_re = re.compile(r'([\r\n] *){3,}')
-        self.note_link_re = re.compile(r'onenote:#(.+?)&')
+        self.space_re = re.compile(r"[ \t]")
+        self.lines_re = re.compile(r"([\r\n] *){3,}")
+        self.note_link_re = re.compile(r"onenote:#(.+?)&")
         self.in_code_block = False
 
     def convert(self):
         result = self.create_metadata()
-        root = BeautifulSoup(self.content, 'html.parser')
+        root = BeautifulSoup(self.content, "html.parser")
         result += self.handle_element(root)
         return result
 
     def create_metadata(self):
-        tags = ['Notebooks/' + self.notebook]
-        parent_tag = self.page.get('parentSection', {}).get('displayName', '')
+        tags = ["Notebooks/" + self.notebook]
+        parent_tag = self.page.get("parentSection", {}).get("displayName", "")
         if parent_tag:
             tags.append(parent_tag)
         return textwrap.dedent(
@@ -54,7 +54,7 @@ class Converter:
         ).lstrip()
 
     def handle_element(self, element):
-        content = ''
+        content = ""
         for child in element.children:
             if isinstance(child, NavigableString):
                 content += self.handle_text(child)
@@ -68,133 +68,131 @@ class Converter:
         return text.strip()
 
     def handle_tag(self, tag, content):
-        handler = getattr(self, f'handle_{tag.name}', None)
+        handler = getattr(self, f"handle_{tag.name}", None)
         if handler:
             return handler(tag, content)
         return content
 
     def handle_title(self, tag, content):
-        return f'# {content}\n\n'
+        return f"# {content}\n\n"
 
     def handle_h1(self, tag, content):
         # Note: We're deliberately "demoting" headings to the next lower tag so
         # that the title acts as h1.
-        return f'## {content}\n\n'
+        return f"## {content}\n\n"
 
     def handle_h2(self, tag, content):
-        return f'### {content}\n\n'
+        return f"### {content}\n\n"
 
     def handle_h3(self, tag, content):
-        return f'#### {content}\n\n'
+        return f"#### {content}\n\n"
 
     def handle_h4(self, tag, content):
-        return f'##### {content}\n\n'
+        return f"##### {content}\n\n"
 
     def handle_h5(self, tag, content):
-        return f'###### {content}\n\n'
+        return f"###### {content}\n\n"
 
     def handle_h6(self, tag, content):
-        return f'**{content}**\n\n'
+        return f"**{content}**\n\n"
 
     def handle_p(self, tag, content):
-        result = ''
+        result = ""
         if self.is_code_block(tag):
             if not self.in_code_block:
                 self.in_code_block = True
-                result += '```\n'
+                result += "```\n"
         if self.in_code_block:
-            result += f'{content}\n'
+            result += f"{content}\n"
             if not self.is_code_block(next_sibling_tag(tag)):
                 self.in_code_block = False
-                result += '```\n\n'
+                result += "```\n\n"
         elif self.is_quote_block(tag):
-            result = f'> {content}\n\n'
+            result = f"> {content}\n\n"
         else:
-            result = f'{content}\n\n'
+            result = f"{content}\n\n"
         return result
 
     def handle_a(self, tag, content):
-        href = tag.get('href')
+        href = tag.get("href")
         match = self.note_link_re.search(href)
         if match:
-            href = f'@note/{match.group(1)}.md'
-        title = tag.get('title')
-        title = title.replace('"', r'\"') if title else ''
-        title = f' "{title}"' if title else ''
-        return f' [{content}]({href}{title}) ' if href else content or ''
+            href = f"@note/{match.group(1)}.md"
+        title = tag.get("title")
+        title = title.replace('"', r"\"") if title else ""
+        title = f' "{title}"' if title else ""
+        return f" [{content}]({href}{title}) " if href else content or ""
 
     def handle_b(self, tag, content):
-        return f'**{content}**'
+        return f"**{content}**"
 
     handle_strong = handle_b
 
     def handle_i(self, tag, content):
-        return f'*{content}*'
+        return f"*{content}*"
 
     handle_em = handle_i
 
     def handle_br(self, tag, content):
-        return ' \n'
+        return " \n"
 
     def handle_li(self, tag, content):
         depth = self.li_depth(tag)
         parent = tag.parent
-        if parent.name == 'ol':
-            bullet = f'{self.index_in_parent(tag) + 1}.'
+        if parent.name == "ol":
+            bullet = f"{self.index_in_parent(tag) + 1}."
         else:
-            bullet = '*'
+            bullet = "*"
         return f'{" " * 4 * depth}{bullet} {content or ""}\n'
 
     def handle_tr(self, tag, content):
-        result = f'|{content}\n'
+        result = f"|{content}\n"
         if self.index_in_parent(tag) == 0:
-            cell_count = self.child_count(tag, 'td')
+            cell_count = self.child_count(tag, "td")
             result += f'|{"---|" * cell_count}\n'
         return result
 
     def handle_td(self, tag, content):
-        return f'{content}|'
+        return f"{content}|"
 
     def handle_img(self, tag, content):
-        url = tag.get('src')
-        mime_type = tag.get('data-src-type')
-        if url.startswith('https://graph.microsoft.com') and self.s:
+        url = tag.get("src")
+        mime_type = tag.get("data-src-type")
+        if url.startswith("https://graph.microsoft.com") and self.s:
             url = download_img(self.s, url, mime_type, self.attach_dir)
-        alt = tag.get('alt')
-        return f'![{alt}]({url})'
+        alt = tag.get("alt")
+        return f"![{alt}]({url})"
 
     def handle_object(self, tag, content):
-        url = tag.get('data')
-        filename = tag.get('data-attachment')
-        if url.startswith('https://graph.microsoft.com') and self.s:
+        url = tag.get("data")
+        filename = tag.get("data-attachment")
+        if url.startswith("https://graph.microsoft.com") and self.s:
             url = download_object(self.s, url, filename, self.attach_dir)
-        return f'[]({url})\n'
+        return f"[]({url})\n"
 
     @staticmethod
     def is_code_block(tag):
         return (
             tag
-            and tag.name == 'p'
-            and tag.get('style')
-            and (
-                'Consolas' in tag.get('style') or 'Courier' in tag.get('style')
-            )
+            and tag.name == "p"
+            and tag.get("style")
+            and ("Consolas" in tag.get("style") or "Courier" in tag.get("style"))
         )
 
     @staticmethod
     def is_quote_block(tag):
         return (
             tag
-            and 'color:#595959' in tag.get('style')
-            and 'font-style:italic' in tag.get('style')
+            and "color:#595959" in tag.get("style")
+            and "font-style:italic" in tag.get("style")
         )
 
     @staticmethod
     def li_depth(tag):
-        assert tag.name == 'li'
+        assert tag.name == "li"
         depth = -1
         while tag:
-            if tag.name == 'li':
+            if tag.name == "li":
                 depth += 1
             tag = tag.parent
         return depth
@@ -218,19 +216,19 @@ def next_sibling_tag(element):
 
 
 def download_img(s, url, mime_type, attach_dir):
-    data = get_attachment(s, url) if s else b' '
+    data = get_attachment(s, url) if s else b" "
     extension = mimetypes.guess_extension(mime_type)
     name = str(uuid.uuid4())
     path = attach_dir / (name + extension)
     path.write_bytes(data)
-    return f'@attachment/{name}{extension}'
+    return f"@attachment/{name}{extension}"
 
 
 def download_object(s, url, filename, attach_dir):
-    data = get_attachment(s, url) if s else b' '
+    data = get_attachment(s, url) if s else b" "
     path = attach_dir / filename
     path.write_bytes(data)
-    return f'@attachment/{filename}'
+    return f"@attachment/{filename}"
 
 
 def convert_page(page, content, notebook, one_note_session, attach_dir):
@@ -240,13 +238,11 @@ def convert_page(page, content, notebook, one_note_session, attach_dir):
     return (page, markdown)
 
 
-if __name__ == '__main__':
-    p_in = Path(__file__).parent.parent / 'test/content.html'
+if __name__ == "__main__":
+    p_in = Path(__file__).parent.parent / "test/content.html"
     content = p_in.read_bytes()
-    p_out = Path(tempfile.gettempdir()) / 'test.md'
+    p_out = Path(tempfile.gettempdir()) / "test.md"
     p_out.write_bytes(
-        convert_page({'title': 'Test'}, content, '', None, p_out.parent)[
-            1
-        ].encode()
+        convert_page({"title": "Test"}, content, "", None, p_out.parent)[1].encode()
     )
     print(p_out)
