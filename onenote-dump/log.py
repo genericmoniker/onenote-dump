@@ -1,8 +1,8 @@
 import logging
 import sys
 
-SIMPLE = '%(message)s'
-VERBOSE = '%(asctime)s %(levelname)1.1s %(message)s'
+SIMPLE = "%(message)s"
+VERBOSE = "%(asctime)s %(levelname)1.1s %(message)s"
 
 
 def setup_logging(level):

@@ -1,4 +1,4 @@
 beautifulsoup4
-requests 
+requests
 requests_oauthlib
 tenacity
