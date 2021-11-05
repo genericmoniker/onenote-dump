@@ -46,7 +46,10 @@ def find_notebook(notebooks, display_name):
 
 
 def get_sections(s: Session, parent, section_display_name):
-    """Get all sections, recursively."""
+    """Get sections, recursively.
+
+    If section_display_name is provided, only that section is returned.
+    """
     url = parent.get("sectionsUrl")
     if url:
         sections = _get_json(s, url)
@@ -58,7 +61,7 @@ def get_sections(s: Session, parent, section_display_name):
     if url:
         section_groups = _get_json(s, url)
         for section_group in section_groups["value"]:
-            yield from get_sections(s, section_group)
+            yield from get_sections(s, section_group, section_display_name)
 
 
 def get_pages(s: Session, notebook, section_display_name):
