@@ -4,10 +4,7 @@ import os
 import pathlib
 import time
 
-import log
-import onenote
-import onenote_auth
-import pipeline
+from onenote_dump import log, onenote, onenote_auth, pipeline
 
 logger = logging.getLogger()
 

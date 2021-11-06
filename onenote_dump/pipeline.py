@@ -3,8 +3,8 @@ import re
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
-from convert import convert_page
-from onenote import get_page_content
+from onenote_dump.convert import convert_page
+from onenote_dump.onenote import get_page_content
 
 
 class Pipeline:

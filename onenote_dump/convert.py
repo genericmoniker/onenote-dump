@@ -15,11 +15,20 @@ import uuid
 from pathlib import Path
 
 from bs4 import BeautifulSoup, NavigableString, Tag
-from onenote import get_attachment
+
+from onenote_dump.onenote import get_attachment
 
 
 class Converter:
     def __init__(self, page, content, notebook, one_note_session, attach_dir):
+        """Create a new HTML to markdown converter.
+
+        :param page: page metadata
+        :param content: page HTML bytes
+        :param notebook: name of the notebook the page is in
+        :param one_note_session: requests session for retrieving attachments
+        :param attach_dir: Path in which to store attachments
+        """
         self.page = page
         self.content = content
         self.notebook = notebook
