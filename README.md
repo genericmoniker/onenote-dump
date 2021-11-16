@@ -30,22 +30,31 @@ example:
 pip install -r requirements.txt
 ```
 
+If you have poetry, you can use that instead:
+
+```
+poetry install
+```
+
 ## Running
 
 ```
-python onenote-dump <notebook> <output directory>
+python onenote_dump/main.py <notebook> <output directory>
 ```
 
 The `<notebook>` parameter is the display name of the notebook. For example:
 
 ```
-python onenote-dump "Software Development Notes" C:\Temp\dump
+python onenote_dump/main.py "Software Development Notes" C:\Temp\dump
 ```
+
+NOTE: If you are using poetry, you can use the `onenote-dump` binary that is
+created with `poetry install` instead of `python onenote_dump/main.py`.
 
 For full usage details:
 
 ```
-python onenote-dump --help
+python onenote_dump/main.py --help
 ```
 
 When run, the script will launch a browser window so that you can authorize the
@@ -58,7 +67,8 @@ The output directory and parents will be created if needed.
 If your notebook is large, there is a good chance you'll hit the request rate
 limit on Microsoft's API, which will cause the script to wait for a few minutes
 and try again. You may wish to kill the program (Ctrl+C) and use the
-`--start-page` option some time later.
+`--start-page` option some time later, or the `--section` option to select a
+subset of a notebook.
 
 If you're happy with the output, you can copy it to your Notable notes
 directory.
