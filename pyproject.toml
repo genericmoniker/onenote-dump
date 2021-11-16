@@ -17,7 +17,7 @@ pre-commit = "^2.15.0"
 pytest = "^6.2.5"
 
 [tool.poetry.scripts]
-onenote-dump = "onenote_dump.__main__:main"
+onenote-dump = "onenote_dump.main:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
