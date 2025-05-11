@@ -1,0 +1,2 @@
+types-requests>=2.31.0.2
+mypy>=1.4.1

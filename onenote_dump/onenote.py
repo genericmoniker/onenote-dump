@@ -20,7 +20,9 @@ class NotebookNotFound(Exception):
         if s:
             try:
                 notebooks = get_notebooks(s)
-                names = [n["displayName"] for n in notebooks["value"]]
+                # Handle both list and dictionary response formats
+                notebook_list = notebooks["value"] if isinstance(notebooks, dict) else notebooks
+                names = [n["displayName"] for n in notebook_list]
                 return "Maybe:\n" + "\n".join(names) + "\n"
             except Exception:
                 return "Possible notebooks unknown."
@@ -95,7 +97,7 @@ def _get_json(s: Session, url):
 MIN_RETRY_WAIT = timedelta(minutes=5).total_seconds()
 
 
-def _is_too_many_requests(e: Exception):
+def _is_too_many_requests(e: BaseException) -> bool:
     if hasattr(e, "response"):
         if e.response.status_code == 429:
             logger.info("Request rate limit hit. Waiting a few minutes...")
