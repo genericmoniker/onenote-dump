@@ -7,6 +7,7 @@ Future?
 * Try to figure out the language of code blocks (guesslang)
 
 """
+
 import mimetypes
 import re
 import tempfile
@@ -50,8 +51,7 @@ class Converter:
         parent_tag = self.page.get("parentSection", {}).get("displayName", "")
         if parent_tag:
             tags.append(parent_tag)
-        return textwrap.dedent(
-            f"""
+        return textwrap.dedent(f"""
             ---
             title: "{self.page.get('title')}"
             created: '{self.page.get('createdDateTime')}'
@@ -59,8 +59,7 @@ class Converter:
             tags: [{', '.join(tags)}]
             ---
 
-            """
-        ).lstrip()
+            """).lstrip()
 
     def handle_element(self, element):
         content = ""
